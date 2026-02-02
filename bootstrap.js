@@ -1,8 +1,18 @@
 let ZoteroCitationCounts, itemObserver;
 
-async function startup({ id, version, rootURI }) {
-  Services.scriptloader.loadSubScript(rootURI + "zoterocitationcounts.js");
+var chromeHandle;
 
+async function startup({ id, version, rootURI }) {
+
+  var aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"]
+                   .getService(Ci.amIAddonManagerStartup);
+  var manifestURI = Services.io.newURI(rootURI + "manifest.json");
+
+  chromeHandle = aomStartup.registerChrome(manifestURI, [
+      ["content", "citationcounts", "./"],
+  ]);
+
+  Services.scriptloader.loadSubScript(rootURI + "zoterocitationcounts.js");
   ZoteroCitationCounts.init({ id, version, rootURI });
   ZoteroCitationCounts.addToAllWindows();
   Zotero.PreferencePanes.register({
@@ -21,7 +31,7 @@ async function startup({ id, version, rootURI }) {
     ),
     pluginID: id,
     flex: 0,
-    width: 100,
+    width: "100px",
     minWidth: 45,
     staticWidth: true,
     dataProvider: (item) => ZoteroCitationCounts.getCitationCount(item),
@@ -58,6 +68,11 @@ function shutdown() {
   ZoteroCitationCounts.removeFromAllWindows();
   Zotero.Notifier.unregisterObserver(itemObserver);
   ZoteroCitationCounts = undefined;
+
+  if (chromeHandle) {
+    chromeHandle.destruct();
+    chromeHandle = null;
+  }
 }
 
 function uninstall() {
