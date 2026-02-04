@@ -31,6 +31,10 @@ citationcounts-preferences-pane-autoretrieve-api =
     .label = { $api }
 citationcounts-preferences-pane-autoretrieve-api-none =
     .label = 不获取
+citationcounts-preferences-pane-missing-doi-title = 缺失 DOI 时的搜索策略 (Crossref)
+citationcounts-preferences-pane-missing-doi-strategy =
+    .label = 按标题搜索（结果可能不准确）
 
 ## Misc
 citationcounts-internal-error = 内部错误
+

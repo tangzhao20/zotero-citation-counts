@@ -466,6 +466,8 @@ ZoteroCitationCounts = {
     let doiField,
       arxivField = false;
 
+    const useTitleFallback = this.getPref("useTitleFallback");
+
     if (useDoi) {
       try {
         doiField = this._getDoi(item);
@@ -477,7 +479,7 @@ ZoteroCitationCounts = {
 
         return [count, `${apiName}/DOI`];
       } catch (error) {
-        if (apiName == 'Crossref') {
+        if (useTitleFallback && apiName == 'Crossref') {
           try {
             const title = item.getField('title');
             const count = await this._sendRequest(
@@ -513,7 +515,7 @@ ZoteroCitationCounts = {
 
         return [count, `${apiName}/arXiv`];
       } catch (error) {
-        if (apiName == 'Crossref') {
+        if (useTitleFallback && apiName == 'Crossref') {
           try {
             const title = item.getField('title');
             const count = await this._sendRequest(

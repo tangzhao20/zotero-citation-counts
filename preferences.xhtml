@@ -12,7 +12,6 @@
 
     <radiogroup id="citationcounts-preference-pane-autoretrieve-radiogroup"
                 preference="extensions.citationcounts.autoretrieve">
-
       <radio value="none"
              data-l10n-id="citationcounts-preferences-pane-autoretrieve-api-none" />
 
@@ -21,8 +20,16 @@
       <radio value="inspire" label="INSPIRE-HEP" />
 
       <radio value="semanticscholar" label="Semantic Scholar" />
-
     </radiogroup>
+  </groupbox>
+
+  <groupbox>
+    <label>
+        <html:h2 data-l10n-id="citationcounts-preferences-pane-missing-doi-title"></html:h2>
+    </label>
+
+    <checkbox preference="extensions.citationcounts.useTitleFallback"
+          data-l10n-id="citationcounts-preferences-pane-missing-doi-strategy" />
   </groupbox>
 
 </vbox>
