@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotero Citation Counts Manager",
-  "version": "2.1",
+  "version": "2.2",
   "description": "Citation Counts Manager for Zotero 8",
   "homepage_url": "https://github.com/FrLars21/ZoteroCitationCountsManager",
   "applications": {
