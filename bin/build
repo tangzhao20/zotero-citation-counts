@@ -2,10 +2,10 @@
 
 cd ..
 
-version='2.2'
+version='2.2.0'
 
-rm -f zoterocitationcountsmanager-${version}.xpi
-zip -r zoterocitationcountsmanager-${version}.xpi locale/* icons/* manifest.json bootstrap.js preferences.xhtml prefs.js zoterocitationcounts.js
+rm -f zotero-citation-counts-v${version}.xpi
+zip -r zotero-citation-counts-v${version}.xpi locale/* icons/* manifest.json bootstrap.js preferences.xhtml prefs.js zoterocitationcounts.js
 
 # To release a new version:
 # - increase version number in all files (not just here)

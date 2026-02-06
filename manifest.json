@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
   "name": "Zotero Citation Counts Manager",
-  "version": "2.2",
-  "description": "Citation Counts Manager for Zotero 8",
-  "homepage_url": "https://github.com/FrLars21/ZoteroCitationCountsManager",
+  "version": "2.2.0",
+  "description": "Citation counts manager for Zotero 8",
+  "homepage_url": "https://github.com/tangzhao20/zotero-citation-counts",
   "applications": {
     "zotero": {
-      "id": "frlars21@github.com",
-      "update_url": "https://www.zotero.org/download/plugins/make-it-red/updates.json",
+      "id": "zotero-citation-counts@tangzhao20",
+      "update_url": "https://raw.githubusercontent.com/tangzhao20/zotero-citation-counts/refs/heads/main/updates.json",
       "strict_min_version": "6.999",
       "strict_max_version": "8.*"
     }
