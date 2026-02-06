@@ -1,0 +1,17 @@
+{
+  "addons": {
+    "zotero-citation-counts@tangzhao20": {
+      "updates": [
+        {
+          "version": "2.2.0",
+          "update_link": "https://github.com/tangzhao20/zotero-citation-counts/releases/v2.2.0/download/zotero-citation-counts-v2.2.0.xpi",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "6.999"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
