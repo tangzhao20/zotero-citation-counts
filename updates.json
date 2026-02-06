@@ -4,7 +4,8 @@
       "updates": [
         {
           "version": "2.2.0",
-          "update_link": "https://github.com/tangzhao20/zotero-citation-counts/releases/v2.2.0/download/zotero-citation-counts-v2.2.0.xpi",
+          "update_link": "https://github.com/tangzhao20/zotero-citation-counts/releases/download/v2.2.0/zotero-citation-counts-v2.2.0.xpi",
+          "update_hash": "sha256:428788c3b04382c8e6581aa302a139896a1958a29c6d97fe1ff28d4f1df0edd9",
           "applications": {
             "zotero": {
               "strict_min_version": "6.999"
