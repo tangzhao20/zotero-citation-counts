@@ -30,9 +30,9 @@ async function startup({ id, version, rootURI }) {
       "citationcounts-column-title"
     ),
     pluginID: id,
-    flex: 0,
-    width: 100,
-    minWidth: 45,
+    // flex: 0,
+    // width: "100px",
+    // minWidth: 45,
     dataProvider: (item) => ZoteroCitationCounts.getCitationCount(item),
     zoteroPersist: ['width', 'hidden', 'sortDirection'],
   });
