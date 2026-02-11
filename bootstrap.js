@@ -31,11 +31,10 @@ async function startup({ id, version, rootURI }) {
     ),
     pluginID: id,
     flex: 0,
-    width: "100px",
+    width: 100,
     minWidth: 45,
-    staticWidth: true,
     dataProvider: (item) => ZoteroCitationCounts.getCitationCount(item),
-    zoteroPersist: ['width', 'hidden', 'sortDirection'],  // persist the column properties
+    zoteroPersist: ['width', 'hidden', 'sortDirection'],
   });
 
   itemObserver = Zotero.Notifier.registerObserver(
