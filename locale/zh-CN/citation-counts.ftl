@@ -1,5 +1,5 @@
 ## For the custom column that the plugin registers
-citationcounts-column-title = 被引用量
+citationcounts-column-title = 引用数
 
 ## For the "Item" contextmenu, where citation counts can be manually retrieved for the selected items.
 citationcounts-itemmenu-retrieve-title =
