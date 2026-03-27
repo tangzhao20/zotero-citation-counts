@@ -15,6 +15,22 @@ async function startup({ id, version, rootURI }) {
   Services.scriptloader.loadSubScript(rootURI + "zoterocitationcounts.js");
   ZoteroCitationCounts.init({ id, version, rootURI });
   ZoteroCitationCounts.addToAllWindows();
+
+  const isZh = Zotero.locale.startsWith("zh");
+  const columnLabel = isZh ? "引用数" : "Citations";
+
+  Zotero.ItemTreeManager.registerColumn({
+    dataKey: "citationcounts",
+    label: columnLabel,
+    pluginID: id,
+    sortReverse: true,
+    flex: 0,
+    // width: "100px",
+    // minWidth: 45,
+    dataProvider: (item) => ZoteroCitationCounts.getCitationCount(item),
+    zoteroPersist: ['width', 'hidden', 'sortDirection'],
+  });
+
   Zotero.PreferencePanes.register({
     pluginID: id,
     label: await ZoteroCitationCounts.l10n.formatValue(
@@ -22,19 +38,6 @@ async function startup({ id, version, rootURI }) {
     ),
     image: rootURI + 'icons/icon.png',
     src: "preferences.xhtml"
-  });
-
-  await Zotero.ItemTreeManager.registerColumns({
-    dataKey: "citationcounts",
-    label: await ZoteroCitationCounts.l10n.formatValue(
-      "citationcounts-column-title"
-    ),
-    pluginID: id,
-    // flex: 0,
-    // width: "100px",
-    // minWidth: 45,
-    dataProvider: (item) => ZoteroCitationCounts.getCitationCount(item),
-    zoteroPersist: ['width', 'hidden', 'sortDirection'],
   });
 
   itemObserver = Zotero.Notifier.registerObserver(
