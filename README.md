@@ -2,10 +2,10 @@
 
 - [GitHub](https://github.com/tangzhao20/zotero-citation-counts): Source code repository
 
-This is an add-on for [Zotero](https://www.zotero.org), a research source management tool. The add-on can auto-fetch citation counts for journal articles using various APIs, including [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net), and [Semantic Scholar](https://www.semanticscholar.org).  
+This is a plugin for [Zotero](https://www.zotero.org), a research source management tool. This plugin can auto-fetch citation counts for journal articles using various APIs, including [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net), and [Semantic Scholar](https://www.semanticscholar.org).  
 [Google Scholar](https://scholar.google.com) is not supported because automated access is against its terms of service.
 
-Please report any bugs, questions, or feature requests in the Github repository.
+Please report any bugs, questions, or feature requests in the GitHub repository.
 
 ## Features
 
@@ -13,7 +13,7 @@ Please report any bugs, questions, or feature requests in the Github repository.
 - Retrieve citation counts manually by right-clicking on one or more items in your Zotero library.
 - Works with the following APIs: [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net) and [Semantic Scholar](https://www.semanticscholar.org).
 - The plugin is compatible with **Zotero 8**.
-- The plugin registers a custom column ("Citation Counts") in your Zotero library so that items can be ordered by citation count.
+- The plugin registers a custom column ("Citations") in your Zotero library so that items can be ordered by citation count.
 - Improved citation count retrieval operation status reporting, including item-specific error messages for those items where a citation count couldn't be retrieved.
 - Concurrent citation count retrieval operations are now possible. Especially important for the autoretrieve feature.
 - Fluent is used for localizing, while the locale files have been simplified and now cover the whole plugin. You are welcome to submit translations as a PR.
@@ -26,12 +26,12 @@ Boilerplate for this plugin was based on Zotero's sample plugin for v7 [Make-It-
 
 ## Installing
 
-- Download the .xpi file from [the latest release](https://github.com/tangzhao20/zotero-citation-counts/releases)
-- Run Zotero (version 8.x.x)
+- Download the `zotero-citation-counts-v<version>.xpi` file from [the latest release](https://github.com/tangzhao20/zotero-citation-counts/releases/latest)
+- Run **Zotero**
 - Go to **Tools** -> **Plugins**
-- Click the **gear icon** in the top right corner
+- Click the **gear icon** ⚙️ in the top right corner
 - Select **Install Plugin From File...**
-- Choose the file `zotero-citation-counts-v2.2.0.xpi`
+- Locate and select the downloaded `.xpi` file
 
 ## License
 
