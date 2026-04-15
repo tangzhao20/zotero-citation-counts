@@ -1,4 +1,4 @@
-# Zotero 8 Citation Counts Manager
+# Zotero Citation Counts Manager
 
 - [GitHub](https://github.com/tangzhao20/zotero-citation-counts): Source code repository
 
@@ -12,7 +12,7 @@ Please report any bugs, questions, or feature requests in the GitHub repository.
 - Autoretrieve citation counts when a new item is added to your Zotero library.
 - Retrieve citation counts manually by right-clicking on one or more items in your Zotero library.
 - Works with the following APIs: [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net) and [Semantic Scholar](https://www.semanticscholar.org).
-- The plugin is compatible with **Zotero 8**.
+- The plugin is compatible with **Zotero 8** and **Zotero 9**.
 - The plugin registers a custom column ("Citations") in your Zotero library so that items can be ordered by citation count.
 - Improved citation count retrieval operation status reporting, including item-specific error messages for those items where a citation count couldn't be retrieved.
 - Concurrent citation count retrieval operations are now possible. Especially important for the autoretrieve feature.
