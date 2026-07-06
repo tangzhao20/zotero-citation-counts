@@ -9,7 +9,7 @@ citationcounts-itemmenu-retrieve-api =
 
 ## For the ProgressWindow, showing citation counts retrieval operation status
 citationcounts-progresswindow-headline = 从 { $api } 获取被引用量
-citationcounts-progresswindow-finished-headline = 从 { $api } 完成被引用量获取
+citationcounts-progresswindow-finished-headline = 已完成从 { $api } 获取被引用量
 citationcounts-progresswindow-error-no-doi = 文章信息中不存在Doi条目
 citationcounts-progresswindow-error-no-arxiv = 文章信息中不存在arXiv id
 citationcounts-progresswindow-error-no-doi-or-arxiv = 文章信息中不存在Doi条目和arXiv id

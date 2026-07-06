@@ -6,8 +6,14 @@ version=$(grep '"version":' manifest.json | sed -E 's/.*"version": "([^"]+)".*/\
 
 echo "Building version $version..."
 
-rm -f zotero-citation-counts-v${version}.xpi
-zip -r zotero-citation-counts-v${version}.xpi locale/* icons/*.png manifest.json bootstrap.js preferences.xhtml prefs.js zoterocitationcounts.js
+xpi_file="zotero-citation-counts-v${version}.xpi"
+
+rm -f "$xpi_file"
+zip -r "$xpi_file" locale/* icons/*.png manifest.json bootstrap.js preferences.xhtml prefs.js zoterocitationcounts.js
+
+if [ "$(uname)" = "Linux" ]; then
+    sha256sum "$xpi_file"
+fi
 
 # To release a new version:
 # - Increase the version number in manifest.json

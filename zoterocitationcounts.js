@@ -1,5 +1,6 @@
 ZoteroCitationCounts = {
   _initialized: false,
+  _requestTimestamps: [],
 
   pluginID: null,
   pluginVersion: null,
@@ -42,7 +43,7 @@ ZoteroCitationCounts = {
         key: "crossref",
         name: "Crossref",
         useDoi: true,
-        useArxiv: true,
+        useArxiv: false,
         methods: {
           urlBuilder: this._crossrefUrl,
           responseCallback: this._crossrefCallback,
@@ -90,9 +91,8 @@ ZoteroCitationCounts = {
   },
 
   icon: function (iconName, hiDPI) {
-    return `chrome://zotero/skin/${iconName}${
-      hiDPI ? (Zotero.hiDPI ? "@2x" : "") : ""
-    }.png`;
+    return `chrome://zotero/skin/${iconName}${hiDPI ? (Zotero.hiDPI ? "@2x" : "") : ""
+      }.png`;
   },
 
   /////////////////////////////////////////////
@@ -181,9 +181,9 @@ ZoteroCitationCounts = {
         api.key === "none"
           ? { "data-l10n-id": "citationcounts-menutools-autoretrieve-api-none" }
           : {
-              "data-l10n-id": "citationcounts-menutools-autoretrieve-api",
-              "data-l10n-args": `{"api": "${api.name}"}`,
-            };
+            "data-l10n-id": "citationcounts-menutools-autoretrieve-api",
+            "data-l10n-args": `{"api": "${api.name}"}`,
+          };
 
       this._injectXULElement(
         document,
@@ -303,55 +303,63 @@ ZoteroCitationCounts = {
     if (!items.length) return;
 
     const progressWindow = new Zotero.ProgressWindow();
-    progressWindow.changeHeadline(
-      await this.l10n.formatValue("citationcounts-progresswindow-headline", {
-        api: api.name,
-      }),
-      this.icon("toolbar-advanced-search") // not compatible in zotero 7?
-    );
+    const isMultiple = items.length > 1;
 
-    const progressWindowItems = [];
-    const itemTitles = items.map((item) => item.getField("title"));
-    itemTitles.forEach((title) => {
-      progressWindowItems.push(
-        new progressWindow.ItemProgress(this.icon("spinner-16px"), title)// not compatible in zotero 7?
-      );
+    const baseHeadline = await this.l10n.formatValue("citationcounts-progresswindow-headline", {
+      api: api.name,
     });
 
+    // append the progress counter
+    const headline = isMultiple
+      ? `${baseHeadline} (0/${items.length})`
+      : baseHeadline;
+
+    progressWindow.changeHeadline(headline);
     progressWindow.show();
 
-    this._updateItem(0, items, api, progressWindow, progressWindowItems);
+    this._updateItem(0, items, api, progressWindow);
   },
 
-  /**
-   * Updates citation counts recursively for a list of items.
-   *
-   * @param currentItemIndex - Index of currently updating Item. Zero-based.
-   * @param items - List of all Items to be updated in this operation.
-   * @param api - API to be used to retrieve *items* citation counts.
-   * @param progressWindow - ProgressWindow associated with this operation.
-   * @param progressWindowItems - List of references to each Zotero.ItemProgress in *progressWindow*.
-   */
   _updateItem: async function (
     currentItemIndex,
     items,
     api,
-    progressWindow,
-    progressWindowItems
+    progressWindow
   ) {
+    const isMultiple = items.length > 1;
+
     // Check if operation is done
     if (currentItemIndex >= items.length) {
-      const headlineFinished = await this.l10n.formatValue(
-        "citationcounts-progresswindow-finished-headline",
-        { api: api.name }
-      );
-      progressWindow.changeHeadline(headlineFinished);
+      if (!isMultiple) {
+        const headlineFinished = await this.l10n.formatValue(
+          "citationcounts-progresswindow-finished-headline",
+          { api: api.name }
+        );
+        progressWindow.changeHeadline(headlineFinished);
+      }
       progressWindow.startCloseTimer(5000);
       return;
     }
 
     const item = items[currentItemIndex];
-    const pwItem = progressWindowItems[currentItemIndex];
+    const title = item.getField("title");
+
+    // Update headline progress
+    if (isMultiple) {
+      const baseHeadline = await this.l10n.formatValue("citationcounts-progresswindow-headline", {
+        api: api.name,
+      });
+      progressWindow.changeHeadline(
+        `${baseHeadline} (${currentItemIndex + 1}/${items.length})`
+      );
+    }
+
+    // Create progress rows in single mode
+    let pwItem = null;
+    if (!isMultiple) {
+      pwItem = new progressWindow.ItemProgress(item.itemType, title);
+      pwItem.setProgress(50);
+    }
 
     try {
       const [count, source] = await this._retrieveCitationCount(
@@ -365,30 +373,29 @@ ZoteroCitationCounts = {
 
       this._setCitationCount(item, source, count);
 
-      // pwItem.setIcon(this.icon("tick"));// not compatible in zotero 7?
-      pwItem.setProgress(100);
+      if (pwItem) {
+        pwItem.setProgress(100);
+      }
     } catch (error) {
-      pwItem.setError();
-      new progressWindow.ItemProgress(
-        this.icon("bullet_yellow"),// not compatible in zotero 7?
-        await this.l10n.formatValue(error.message, { api: api.name }),
-        pwItem
-      );
+      if (pwItem) {
+        pwItem.setError();
+        pwItem.setProgress(100);
+        new progressWindow.ItemProgress(
+          "",
+          await this.l10n.formatValue(error.message, { api: api.name }),
+          pwItem
+        );
+      }
     }
 
     this._updateItem(
       currentItemIndex + 1,
       items,
       api,
-      progressWindow,
-      progressWindowItems
+      progressWindow
     );
   },
 
-
-  /**
-   * Remove citation counts from the Items "extra" field.
-   */
   _removeCitationCount: function (item) {
     const pattern = /^(\d+ citations|Citations:)/i;
     const extra = item.getField("extra");
@@ -454,23 +461,64 @@ ZoteroCitationCounts = {
    * Send a request to a specified url, handle response with specified callback, and return a validated integer.
    */
   _sendRequest: async function (url, callback) {
-    const response = await fetch(url)
-      .then((response) => response.json())
-      .catch(() => {
-        throw new Error("citationcounts-progresswindow-error-bad-api-response");
-      });
+    // No more than 5 requests in 1 second.
+    let now = Date.now();
+    this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < 1000);
 
-    try {
-      const count = parseInt(await callback(response));
-
-      if (!(Number.isInteger(count) && count >= 0)) {
-        // throw generic error since catch bloc will convert it.
-        throw new Error();
+    if (this._requestTimestamps.length >= 5) {
+      const oldest = this._requestTimestamps[0];
+      const waitTime = 1000 - (now - oldest);
+      if (waitTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
+      // Re-filter after waiting
+      now = Date.now();
+      this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < 1000);
+    }
+    this._requestTimestamps.push(Date.now());
 
-      return count;
-    } catch (error) {
-      throw new Error("citationcounts-progresswindow-error-no-citation-count");
+    // Exponential retry delays
+    const maxRetries = 4;
+    const baseDelay = 1000; // ms
+    const factor = 1.5;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          // If the server returned 404 or 400, it's a client error (e.g. DOI not found/invalid).
+          // Retrying won't change this, so we fail immediately.
+          if (response.status === 404 || response.status === 400) {
+            throw new Error("citationcounts-progresswindow-error-bad-api-response");
+          }
+          throw new Error("Temporary error " + response.status);
+        }
+
+        const data = await response.json();
+        const count = parseInt(await callback(data));
+
+        if (!(Number.isInteger(count) && count >= 0)) {
+          throw new Error("citationcounts-progresswindow-error-no-citation-count");
+        }
+
+        return count;
+      } catch (error) {
+        const isLastAttempt = attempt === maxRetries;
+        const isNonRetryable = error.message === "citationcounts-progresswindow-error-bad-api-response" ||
+          error.message === "citationcounts-progresswindow-error-no-citation-count";
+
+        if (isLastAttempt || isNonRetryable) {
+          if (error.message.startsWith("citationcounts-progresswindow-error-")) {
+            throw error;
+          }
+          throw new Error("citationcounts-progresswindow-error-bad-api-response");
+        }
+
+        const delayMs = baseDelay * Math.pow(factor, attempt);
+        this._log(`Request failed (attempt ${attempt + 1}/${maxRetries + 1}): ${error.message}. Retrying in ${delayMs} ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
     }
   },
 
@@ -499,6 +547,7 @@ ZoteroCitationCounts = {
 
         return [count, `${apiName}/DOI`];
       } catch (error) {
+        errorMessage = error.message;
         if (apiName == 'Crossref') {
           if (useTitleFallback) {
             try {
