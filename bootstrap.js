@@ -50,7 +50,12 @@ async function startup({ id, version, rootURI }) {
           const api = ZoteroCitationCounts.APIs.find((api) => api.key === pref);
           if (!api) return;
 
-          ZoteroCitationCounts.updateItems(Zotero.Items.get(ids), api);
+          const items = Zotero.Items.get(ids).filter(
+            (item) => item && item.isRegularItem() && !item.isFeedItem
+          );
+          if (!items.length) return;
+
+          ZoteroCitationCounts.updateItems(items, api);
         }
       },
     },
