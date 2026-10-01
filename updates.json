@@ -3,9 +3,9 @@
     "zotero-citation-counts@tangzhao20": {
       "updates": [
         {
-          "version": "2.3.0",
-          "update_link": "https://github.com/tangzhao20/zotero-citation-counts/releases/download/v2.3.0/zotero-citation-counts-v2.3.0.xpi",
-          "update_hash": "sha256:2374fffc382cfabbc05129f02dd23bac3f6fbb50e0be2a18281c3250012d7dc0",
+          "version": "2.3.1",
+          "update_link": "https://github.com/tangzhao20/zotero-citation-counts/releases/download/v2.3.1/zotero-citation-counts-v2.3.1.xpi",
+          "update_hash": "sha256:16886224191ce1b055e4ebf32367cbb7e5e4a5edef8ba14f05f4f1106fd088a6",
           "applications": {
             "zotero": {
               "strict_min_version": "6.999"
