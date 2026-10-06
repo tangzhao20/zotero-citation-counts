@@ -5,19 +5,24 @@
 This is a plugin for [Zotero](https://www.zotero.org), a research source management tool. This plugin can auto-fetch citation counts for journal articles using various APIs, including [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net), and [Semantic Scholar](https://www.semanticscholar.org).  
 [Google Scholar](https://scholar.google.com) is not supported because automated access is against its terms of service.
 
-Please report any bugs, questions, or feature requests in the GitHub repository.
+If you have any bugs, questions, or feature requests, please [open an issue](https://github.com/tangzhao20/zotero-citation-counts/issues) in the GitHub repository.
+
+## Compatibility
+
+The plugin is compatible with **Zotero 8+**. Tested up to **Zotero 10**.
+
+Please [open an issue](https://github.com/tangzhao20/zotero-citation-counts/issues) if it breaks on newer versions.
 
 ## Features
 
 - Autoretrieve citation counts when a new item is added to your Zotero library.
 - Retrieve citation counts manually by right-clicking on one or more items in your Zotero library.
 - Works with the following APIs: [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net) and [Semantic Scholar](https://www.semanticscholar.org).
-- The plugin is compatible with **Zotero 8** and **Zotero 9**.
 - The plugin registers a custom column ("Citations") in your Zotero library so that items can be ordered by citation count.
 - Improved citation count retrieval operation status reporting, including item-specific error messages for those items where a citation count couldn't be retrieved.
 - Concurrent citation count retrieval operations are now possible. Especially important for the autoretrieve feature.
-- Fluent is used for localizing, while the locale files have been simplified and now cover the whole plugin. You are welcome to submit translations as a PR.
-- *New*: Optionally search Crossref by title if an item lacks a DOI.
+- Fluent is used for localizing, while the locale files have been simplified and now cover the whole plugin. 
+- Optionally search Crossref by title if an item lacks a DOI.
 
 ## Acknowledgements
 
