@@ -24,10 +24,13 @@
       <radio value="openalex" label="OpenAlex" />
     </radiogroup>
 
-    <html:label for="citationcounts-openalex-api-key"
-                data-l10n-id="citationcounts-preferences-openalex-api-key"></html:label>
-    <html:input id="citationcounts-openalex-api-key" type="password" autocomplete="off"
-                preference="extensions.citationcounts.openalexApiKey" />
+    <hbox align="center">
+      <html:label for="citationcounts-openalex-api-key"
+                  data-l10n-id="citationcounts-preferences-openalex-api-key"></html:label>
+      <html:input id="citationcounts-openalex-api-key" type="password" autocomplete="off"
+                  style="flex: 1; margin-inline-start: 0.5em;"
+                  preference="extensions.citationcounts.openalexApiKey" />
+    </hbox>
     <description data-l10n-id="citationcounts-preferences-openalex-api-key-description" />
   </groupbox>
 
