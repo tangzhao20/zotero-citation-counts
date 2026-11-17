@@ -37,7 +37,7 @@ citationcounts-preferences-pane-missing-doi-strategy =
 
 ## OpenAlex API key
 citationcounts-preferences-openalex-api-key = OpenAlex API key（可选）
-citationcounts-preferences-openalex-api-key-description = 留空时匿名访问。免费的 OpenAlex API key 提供更高的使用额度。
+citationcounts-preferences-openalex-api-key-description = 免费的 OpenAlex API key 提供更高的使用额度。
 
 ## Misc
 citationcounts-internal-error = 内部错误

@@ -37,7 +37,7 @@ citationcounts-preferences-pane-missing-doi-strategy =
 
 ## OpenAlex API key
 citationcounts-preferences-openalex-api-key = OpenAlex API key (optional)
-citationcounts-preferences-openalex-api-key-description = Leave empty for anonymous access. A free OpenAlex API key provides a higher usage allowance.
+citationcounts-preferences-openalex-api-key-description = A free OpenAlex API key provides a higher usage allowance.
 
 ## Misc
 citationcounts-internal-error = Internal error
