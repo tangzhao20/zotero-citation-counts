@@ -9,7 +9,7 @@ echo "Building version $version..."
 xpi_file="zotero-citation-counts-v${version}.xpi"
 
 rm -f "$xpi_file"
-zip -r "$xpi_file" locale/* icons/*.png manifest.json bootstrap.js preferences.xhtml prefs.js zoterocitationcounts.js openalex-select.xhtml openalex-select.js
+zip -r "$xpi_file" locale/* icons/*.png manifest.json bootstrap.js preferences.xhtml prefs.js zoterocitationcounts.js
 
 if [ "$(uname)" = "Linux" ]; then
     sha256sum "$xpi_file"
