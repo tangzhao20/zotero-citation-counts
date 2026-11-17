@@ -55,7 +55,7 @@ async function startup({ id, version, rootURI }) {
           );
           if (!items.length) return;
 
-          ZoteroCitationCounts.updateItems(items, api);
+          ZoteroCitationCounts.updateItems(items, api, { interactive: false });
         }
       },
     },

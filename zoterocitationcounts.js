@@ -69,6 +69,16 @@ ZoteroCitationCounts = {
           responseCallback: this._semanticScholarCallback,
         },
       },
+      {
+        key: "openalex",
+        name: "OpenAlex",
+        useDoi: true,
+        useArxiv: false,
+        methods: {
+          urlBuilder: this._openAlexUrl,
+          responseCallback: this._openAlexCallback,
+        },
+      },
     ];
 
     this._initialized = true;
@@ -298,7 +308,7 @@ ZoteroCitationCounts = {
   /**
    * Start citation count retrieval operation
    */
-  updateItems: async function (itemsRaw, api) {
+  updateItems: async function (itemsRaw, api, { interactive = true } = {}) {
     const items = itemsRaw.filter((item) => !item.isFeedItem);
     if (!items.length) return;
 
@@ -317,19 +327,21 @@ ZoteroCitationCounts = {
     progressWindow.changeHeadline(headline);
     progressWindow.show();
 
-    this._updateItem(0, items, api, progressWindow);
+    return this._updateItem(0, items, api, progressWindow, { interactive, pending: [] });
   },
 
   _updateItem: async function (
     currentItemIndex,
     items,
     api,
-    progressWindow
+    progressWindow,
+    context
   ) {
     const isMultiple = items.length > 1;
 
     // Check if operation is done
     if (currentItemIndex >= items.length) {
+      await this._resolveOpenAlexMatches(context.pending, context.interactive, progressWindow);
       if (!isMultiple) {
         const headlineFinished = await this.l10n.formatValue(
           "citationcounts-progresswindow-finished-headline",
@@ -362,7 +374,7 @@ ZoteroCitationCounts = {
     }
 
     try {
-      const [count, source] = await this._retrieveCitationCount(
+      const result = await this._retrieveCitationCount(
         item,
         api.name,
         api.useDoi,
@@ -371,10 +383,13 @@ ZoteroCitationCounts = {
         api.methods.responseCallback
       );
 
-      this._setCitationCount(item, source, count);
-
-      if (pwItem) {
-        pwItem.setProgress(100);
+      if (result.candidates) {
+        // Resolve ambiguous works only after every item has been looked up.
+        context.pending.push({ item, candidates: result.candidates, pwItem });
+      } else {
+        const [count, source] = result;
+        await this._setCitationCount(item, source, count);
+        if (pwItem) pwItem.setProgress(100);
       }
     } catch (error) {
       if (pwItem) {
@@ -388,12 +403,52 @@ ZoteroCitationCounts = {
       }
     }
 
-    this._updateItem(
+    return this._updateItem(
       currentItemIndex + 1,
       items,
       api,
-      progressWindow
+      progressWindow,
+      context
     );
+  },
+
+  _resolveOpenAlexMatches: async function (pending, interactive, progressWindow) {
+    for (const { item, candidates, pwItem } of pending) {
+      const row = pwItem || new progressWindow.ItemProgress(item.itemType, item.getField("title"));
+      try {
+        const selected = interactive ? await this._selectOpenAlexWork(item, candidates) : null;
+        if (selected) {
+          await this._setCitationCount(item, "OpenAlex/title", selected.cited_by_count);
+        } else {
+          const message = interactive
+            ? "citationcounts-progresswindow-selection-skipped"
+            : "citationcounts-progresswindow-selection-required";
+          new progressWindow.ItemProgress("", await this.l10n.formatValue(message), row);
+        }
+      } catch (error) {
+        row.setError();
+        new progressWindow.ItemProgress("", await this.l10n.formatValue(
+          "citationcounts-progresswindow-error-selection"
+        ), row);
+        this._log(error.message);
+      }
+      row.setProgress(100);
+    }
+  },
+
+  _selectOpenAlexWork: function (item, candidates) {
+    const parent = Zotero.getMainWindow();
+    if (!parent) return null;
+    const io = { itemTitle: item.getField("title"), candidates, selectedIndex: null };
+    parent.openDialog(
+      "chrome://citationcounts/content/openalex-select.xhtml",
+      "citationcounts-openalex-select",
+      "chrome,modal,centerscreen,resizable",
+      io
+    );
+    return Number.isInteger(io.selectedIndex) && io.selectedIndex >= 0 && io.selectedIndex < candidates.length
+      ? candidates[io.selectedIndex]
+      : null;
   },
 
   _removeCitationCount: function (item) {
@@ -425,7 +480,7 @@ ZoteroCitationCounts = {
     extraFieldLines.unshift(`${count} citations (${source}) [${today}]`);
 
     item.setField("extra", extraFieldLines.join("\n"));
-    item.saveTx();
+    return item.saveTx();
   },
 
   /**
@@ -458,9 +513,9 @@ ZoteroCitationCounts = {
   },
 
   /**
-   * Send a request to a specified url, handle response with specified callback, and return a validated integer.
+   * Handle a JSON response with a callback, validating its result as a count unless disabled for search results.
    */
-  _sendRequest: async function (url, callback) {
+  _sendRequest: async function (url, callback, { validateCount = true, headers } = {}) {
     // No more than 5 requests in 1 second.
     let now = Date.now();
     this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < 1000);
@@ -484,19 +539,22 @@ ZoteroCitationCounts = {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, headers ? { headers } : undefined);
 
         if (!response.ok) {
-          // If the server returned 404 or 400, it's a client error (e.g. DOI not found/invalid).
-          // Retrying won't change this, so we fail immediately.
-          if (response.status === 404 || response.status === 400) {
-            throw new Error("citationcounts-progresswindow-error-bad-api-response");
-          }
-          throw new Error("Temporary error " + response.status);
+          // Invalid identifiers and authentication failures do not benefit from retries.
+          const permanent = [400, 401, 403, 404].includes(response.status);
+          const error = new Error(permanent
+            ? "citationcounts-progresswindow-error-bad-api-response"
+            : "Temporary error " + response.status);
+          error.status = response.status;
+          throw error;
         }
 
         const data = await response.json();
-        const count = parseInt(await callback(data));
+        const result = await callback(data);
+        if (!validateCount) return result;
+        const count = parseInt(result);
 
         if (!(Number.isInteger(count) && count >= 0)) {
           throw new Error("citationcounts-progresswindow-error-no-citation-count");
@@ -512,7 +570,9 @@ ZoteroCitationCounts = {
           if (error.message.startsWith("citationcounts-progresswindow-error-")) {
             throw error;
           }
-          throw new Error("citationcounts-progresswindow-error-bad-api-response");
+          const requestError = new Error("citationcounts-progresswindow-error-bad-api-response");
+          requestError.status = error.status;
+          throw requestError;
         }
 
         const delayMs = baseDelay * Math.pow(factor, attempt);
@@ -530,6 +590,10 @@ ZoteroCitationCounts = {
     urlFunction,
     requestCallback
   ) {
+    if (apiName === "OpenAlex") {
+      return this._retrieveOpenAlexCitationCount(item);
+    }
+
     let errorMessage = "";
     let doiField,
       arxivField = false;
@@ -628,6 +692,70 @@ ZoteroCitationCounts = {
   /////////////////////////////////////////////
   //            API specific stuff           //
   ////////////////////////////////////////////
+
+  _openAlexUrl: function (id) {
+    const doi = decodeURIComponent(id).trim()
+      .replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, "");
+    return `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=cited_by_count`;
+  },
+
+  _openAlexUrlByTitle: function (title) {
+    return `https://api.openalex.org/works?search.title=${encodeURIComponent(title)}&per_page=10&select=id,title,doi,publication_year,authorships,cited_by_count`;
+  },
+
+  _openAlexCallback: function (response) {
+    const count = response?.cited_by_count;
+    if (!Number.isSafeInteger(count) || count < 0) {
+      throw new Error("citationcounts-progresswindow-error-no-citation-count");
+    }
+    return count;
+  },
+
+  _normalizeOpenAlexTitle: function (title) {
+    return title.replace(/<\/?(?:i|b|em|strong|sub|sup|span)\b[^>]*>/gi, "")
+      .normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+  },
+
+  _retrieveOpenAlexCitationCount: async function (item) {
+    const key = (this.getPref("openalexApiKey") || "").trim();
+    const headers = key ? { Authorization: `Bearer ${key}` } : undefined;
+
+    try {
+      const count = await this._sendRequest(
+        this._openAlexUrl(this._getDoi(item)), this._openAlexCallback, { headers }
+      );
+      return [count, "OpenAlex/DOI"];
+    } catch (error) {
+      const canSearch = error.message === "citationcounts-progresswindow-error-no-doi" ||
+        error.status === 400 || error.status === 404;
+      if (!this.getPref("openalexUseTitleFallback") || !canSearch) throw error;
+    }
+
+    const title = item.getField("title").trim();
+    if (!title) throw new Error("citationcounts-progresswindow-error-no-title");
+
+    const results = await this._sendRequest(this._openAlexUrlByTitle(title), (response) => {
+      if (!Array.isArray(response?.results)) {
+        throw new Error("citationcounts-progresswindow-error-bad-api-response");
+      }
+      return response.results;
+    }, { validateCount: false, headers });
+
+    const seen = new Set();
+    const candidates = results.filter((work) => {
+      if (!work || typeof work.id !== "string" || seen.has(work.id) ||
+          typeof work.title !== "string" || !work.title.trim() ||
+          !Number.isSafeInteger(work.cited_by_count) || work.cited_by_count < 0) return false;
+      seen.add(work.id);
+      return true;
+    });
+    if (!candidates.length) throw new Error("citationcounts-progresswindow-error-no-title-match");
+
+    const normalizedTitle = this._normalizeOpenAlexTitle(title);
+    const matches = candidates.filter((work) => this._normalizeOpenAlexTitle(work.title) === normalizedTitle);
+    if (matches.length === 1) return [matches[0].cited_by_count, "OpenAlex/title"];
+    return { candidates };
+  },
 
   _crossrefUrl: function (id, type) {
     return `https://api.crossref.org/works/${id}/transform/application/vnd.citationstyles.csl+json`;

@@ -20,6 +20,8 @@
       <radio value="inspire" label="INSPIRE-HEP" />
 
       <radio value="semanticscholar" label="Semantic Scholar" />
+
+      <radio value="openalex" label="OpenAlex" />
     </radiogroup>
   </groupbox>
 
@@ -30,6 +32,19 @@
 
     <checkbox preference="extensions.citationcounts.useTitleFallback"
           data-l10n-id="citationcounts-preferences-pane-missing-doi-strategy" />
+  </groupbox>
+
+  <groupbox>
+    <label>
+      <html:h2 data-l10n-id="citationcounts-preferences-openalex-title"></html:h2>
+    </label>
+    <html:label for="citationcounts-openalex-api-key"
+                data-l10n-id="citationcounts-preferences-openalex-api-key"></html:label>
+    <html:input id="citationcounts-openalex-api-key" type="password" autocomplete="off"
+                preference="extensions.citationcounts.openalexApiKey" />
+    <description data-l10n-id="citationcounts-preferences-openalex-api-key-description" />
+    <checkbox preference="extensions.citationcounts.openalexUseTitleFallback"
+              data-l10n-id="citationcounts-preferences-openalex-title-fallback" />
   </groupbox>
 
 </vbox>

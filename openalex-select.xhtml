@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://zotero/skin/zotero.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        id="citationcounts-openalex-select"
+        class="zotero-dialog"
+        data-l10n-id="citationcounts-openalex-dialog-window"
+        width="760" height="580"
+        persist="screenX screenY width height">
+  <dialog buttons="accept,cancel"
+          data-l10n-id="citationcounts-openalex-dialog-buttons"
+          data-l10n-attrs="buttonlabelaccept,buttonlabelcancel">
+    <script src="chrome://zotero/content/include.js" />
+    <script src="chrome://citationcounts/content/openalex-select.js" />
+    <linkset>
+      <html:link rel="localization" href="citation-counts.ftl" />
+    </linkset>
+    <html:style>
+      #openalex-item-title { font-weight: bold; margin: 0.5em 0 1em; }
+      fieldset { border: 0; margin: 0; padding: 0; }
+      #openalex-candidates { max-height: 26em; overflow-y: auto; }
+      .openalex-candidate { display: flex; align-items: flex-start; gap: 0.5em; padding: 0.7em; }
+      .openalex-candidate input { flex-shrink: 0; margin-top: 0.2em; }
+      .openalex-candidate-title { overflow-wrap: anywhere; }
+      .openalex-candidate-details { margin-top: 0.3em; opacity: 0.8; overflow-wrap: anywhere; }
+    </html:style>
+    <description data-l10n-id="citationcounts-openalex-select-description" />
+    <html:div id="openalex-item-title" />
+    <html:fieldset>
+      <html:legend data-l10n-id="citationcounts-openalex-select-candidates" />
+      <html:div id="openalex-candidates" />
+    </html:fieldset>
+  </dialog>
+</window>
