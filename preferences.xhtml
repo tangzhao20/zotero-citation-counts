@@ -20,7 +20,18 @@
       <radio value="inspire" label="INSPIRE-HEP" />
 
       <radio value="semanticscholar" label="Semantic Scholar" />
+
+      <radio value="openalex" label="OpenAlex" />
     </radiogroup>
+
+    <hbox align="center">
+      <html:label for="citationcounts-openalex-api-key"
+                  data-l10n-id="citationcounts-preferences-openalex-api-key"></html:label>
+      <html:input id="citationcounts-openalex-api-key" type="password" autocomplete="off"
+                  style="flex: 1; margin-inline-start: 0.5em;"
+                  preference="extensions.citationcounts.openalexApiKey" />
+    </hbox>
+    <description data-l10n-id="citationcounts-preferences-openalex-api-key-description" />
   </groupbox>
 
   <groupbox>

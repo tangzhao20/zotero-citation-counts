@@ -69,6 +69,16 @@ ZoteroCitationCounts = {
           responseCallback: this._semanticScholarCallback,
         },
       },
+      {
+        key: "openalex",
+        name: "OpenAlex",
+        useDoi: true,
+        useArxiv: false,
+        methods: {
+          urlBuilder: this._openAlexUrl,
+          responseCallback: this._openAlexCallback,
+        },
+      },
     ];
 
     this._initialized = true;
@@ -460,7 +470,7 @@ ZoteroCitationCounts = {
   /**
    * Send a request to a specified url, handle response with specified callback, and return a validated integer.
    */
-  _sendRequest: async function (url, callback) {
+  _sendRequest: async function (url, callback, { headers } = {}) {
     // No more than 5 requests in 1 second.
     let now = Date.now();
     this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < 1000);
@@ -484,7 +494,7 @@ ZoteroCitationCounts = {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, headers ? { headers } : undefined);
 
         if (!response.ok) {
           // If the server returned 404 or 400, it's a client error (e.g. DOI not found/invalid).
@@ -535,6 +545,9 @@ ZoteroCitationCounts = {
       arxivField = false;
 
     const useTitleFallback = this.getPref("useTitleFallback");
+    const isOpenAlex = apiName === "OpenAlex";
+    const key = isOpenAlex ? (this.getPref("openalexApiKey") || "").trim() : "";
+    const headers = key ? { Authorization: `Bearer ${key}` } : undefined;
 
     if (useDoi) {
       try {
@@ -542,26 +555,28 @@ ZoteroCitationCounts = {
 
         const count = await this._sendRequest(
           urlFunction(doiField, "doi"),
-          requestCallback
+          requestCallback,
+          { headers }
         );
 
         return [count, `${apiName}/DOI`];
       } catch (error) {
         errorMessage = error.message;
-        if (apiName == 'Crossref') {
+        if (apiName == 'Crossref' || isOpenAlex) {
           if (useTitleFallback) {
             try {
               const title = item.getField('title');
               const count = await this._sendRequest(
-                this._crossrefUrlByTitle(title, "crossref"),
-                this._crossrefCallbackByTitle
+                isOpenAlex ? this._openAlexUrlByTitle(title) : this._crossrefUrlByTitle(title, "crossref"),
+                isOpenAlex ? this._openAlexCallbackByTitle : this._crossrefCallbackByTitle,
+                { headers }
               );
 
               return [count, `${apiName}/title`];
             } catch (error) {
               errorMessage = error.message;
             }
-          } else {
+          } else if (apiName == 'Crossref') {
             this._removeCitationCount(item);
           }
         }
@@ -628,6 +643,24 @@ ZoteroCitationCounts = {
   /////////////////////////////////////////////
   //            API specific stuff           //
   ////////////////////////////////////////////
+
+  _openAlexUrl: function (id) {
+    const doi = decodeURIComponent(id).trim()
+      .replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, "");
+    return `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=cited_by_count`;
+  },
+
+  _openAlexUrlByTitle: function (title) {
+    return `https://api.openalex.org/works?search.title=${encodeURIComponent(title)}&per_page=1&select=cited_by_count`;
+  },
+
+  _openAlexCallback: function (response) {
+    return response["cited_by_count"];
+  },
+
+  _openAlexCallbackByTitle: function (response) {
+    return response["results"][0]["cited_by_count"];
+  },
 
   _crossrefUrl: function (id, type) {
     return `https://api.crossref.org/works/${id}/transform/application/vnd.citationstyles.csl+json`;

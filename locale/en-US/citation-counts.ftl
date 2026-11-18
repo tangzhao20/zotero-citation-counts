@@ -31,9 +31,13 @@ citationcounts-preferences-pane-autoretrieve-api =
     .label = { $api }
 citationcounts-preferences-pane-autoretrieve-api-none =
     .label = No
-citationcounts-preferences-pane-missing-doi-title = Missing DOI Search Strategy (Crossref):
+citationcounts-preferences-pane-missing-doi-title = Missing DOI Search Strategy (Crossref / OpenAlex):
 citationcounts-preferences-pane-missing-doi-strategy =
     .label = Try title-based search (results may be inaccurate)
+
+## OpenAlex API key
+citationcounts-preferences-openalex-api-key = OpenAlex API key (optional)
+citationcounts-preferences-openalex-api-key-description = A free OpenAlex API key provides a higher usage allowance.
 
 ## Misc
 citationcounts-internal-error = Internal error
