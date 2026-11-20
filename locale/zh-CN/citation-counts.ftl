@@ -34,6 +34,9 @@ citationcounts-preferences-pane-autoretrieve-api-none =
 citationcounts-preferences-pane-missing-doi-title = 缺失 DOI 时的搜索策略 (Crossref / OpenAlex)
 citationcounts-preferences-pane-missing-doi-strategy =
     .label = 按标题搜索（结果可能不准确）
+citationcounts-preferences-pane-extra-title = 更新引用数时的处理方式
+citationcounts-preferences-pane-keep-citation-history =
+    .label = 保留历史记录而非覆盖
 
 ## OpenAlex API key
 citationcounts-preferences-openalex-api-key = OpenAlex API key（可选）

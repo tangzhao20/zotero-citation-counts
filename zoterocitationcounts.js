@@ -406,14 +406,16 @@ ZoteroCitationCounts = {
     );
   },
 
-  _removeCitationCount: function (item) {
+  _removeTitleCitationCount: function (item, apiName) {
     const pattern = /^(\d+ citations|Citations:)/i;
     const extra = item.getField("extra");
     if (!extra) return;
 
+    const tag = `(${apiName}/title)`;
     const lines = extra.split("\n");
-
-    const newLines = lines.filter((line) => !pattern.test(line));
+    const newLines = lines.filter(
+      (line) => !(pattern.test(line) && line.includes(tag))
+    );
 
     if (lines.length !== newLines.length) {
       item.setField("extra", newLines.join("\n"));
@@ -426,10 +428,12 @@ ZoteroCitationCounts = {
    * Ref: https://www.zotero.org/support/kb/item_types_and_fields#citing_fields_from_extra
    */
   _setCitationCount: function (item, source, count) {
+    const keepHistory = this.getPref("keepCitationHistory");
     const pattern = /^(\d+ citations|Citations:)/i;
-    const extraFieldLines = (item.getField("extra") || "")
-      .split("\n")
-      .filter((line) => !pattern.test(line));
+    const extra = item.getField("extra") || "";
+    const extraFieldLines = extra
+      ? extra.split("\n").filter((line) => keepHistory || !pattern.test(line))
+      : [];
 
     const today = new Date().toISOString().split("T")[0];
     extraFieldLines.unshift(`${count} citations (${source}) [${today}]`);
@@ -576,8 +580,8 @@ ZoteroCitationCounts = {
             } catch (error) {
               errorMessage = error.message;
             }
-          } else if (apiName == 'Crossref') {
-            this._removeCitationCount(item);
+          } else {
+            this._removeTitleCitationCount(item, apiName);
           }
         }
       }
@@ -603,23 +607,7 @@ ZoteroCitationCounts = {
 
         return [count, `${apiName}/arXiv`];
       } catch (error) {
-        if (apiName == 'Crossref') {
-          if (useTitleFallback) {
-            try {
-              const title = item.getField('title');
-              const count = await this._sendRequest(
-                this._crossrefUrlByTitle(title, "crossref"),
-                this._crossrefCallbackByTitle
-              );
-
-              return [count, `${apiName}/title`];
-            } catch (error) {
-              errorMessage = error.message;
-            }
-          } else {
-            this._removeCitationCount(item);
-          }
-        }
+        errorMessage = error.message;
       }
 
       // if both no doi and no arxiv id on item

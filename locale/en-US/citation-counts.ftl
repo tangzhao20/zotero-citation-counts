@@ -34,6 +34,9 @@ citationcounts-preferences-pane-autoretrieve-api-none =
 citationcounts-preferences-pane-missing-doi-title = Missing DOI Search Strategy (Crossref / OpenAlex):
 citationcounts-preferences-pane-missing-doi-strategy =
     .label = Try title-based search (results may be inaccurate)
+citationcounts-preferences-pane-extra-title = When Updating Citation Counts:
+citationcounts-preferences-pane-keep-citation-history =
+    .label = Keep citation history instead of replacing
 
 ## OpenAlex API key
 citationcounts-preferences-openalex-api-key = OpenAlex API key (optional)
