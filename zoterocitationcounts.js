@@ -1,6 +1,7 @@
 ZoteroCitationCounts = {
   _initialized: false,
   _requestTimestamps: [],
+  _citationPattern: /^(\d+ citations|Citations:)/i,
 
   pluginID: null,
   pluginVersion: null,
@@ -87,7 +88,7 @@ ZoteroCitationCounts = {
   getCitationCount: function (item) {
     const extraFieldLines = (item.getField("extra") || "")
       .split("\n")
-      .filter((line) => /^Citations:|^\d+ citations/i.test(line));
+      .filter((line) => this._citationPattern.test(line));
 
     return extraFieldLines[0]?.match(/^\d+/) || "-";
   },
@@ -407,14 +408,13 @@ ZoteroCitationCounts = {
   },
 
   _removeTitleCitationCount: function (item, apiName) {
-    const pattern = /^(\d+ citations|Citations:)/i;
     const extra = item.getField("extra");
     if (!extra) return;
 
     const tag = `(${apiName}/title)`;
     const lines = extra.split("\n");
     const newLines = lines.filter(
-      (line) => !(pattern.test(line) && line.includes(tag))
+      (line) => !(this._citationPattern.test(line) && line.includes(tag))
     );
 
     if (lines.length !== newLines.length) {
@@ -429,10 +429,9 @@ ZoteroCitationCounts = {
    */
   _setCitationCount: function (item, source, count) {
     const keepHistory = this.getPref("keepCitationHistory");
-    const pattern = /^(\d+ citations|Citations:)/i;
     const extra = item.getField("extra") || "";
     const extraFieldLines = extra
-      ? extra.split("\n").filter((line) => keepHistory || !pattern.test(line))
+      ? extra.split("\n").filter((line) => keepHistory || !this._citationPattern.test(line))
       : [];
 
     const now = new Date();
@@ -557,17 +556,19 @@ ZoteroCitationCounts = {
 
     const useTitleFallback = this.getPref("useTitleFallback");
     let headers;
-    let rateLimit = 5;
-    if (apiName === "OpenAlex") {
-      const key = (this.getPref("openalexApiKey") || "").trim();
-      if (key) headers = { Authorization: `Bearer ${key}` };
-      rateLimit = key ? 30 : 10;
+    let rateLimit;
+    if (apiName === "Crossref") {
+      rateLimit = 5;
+    } else if (apiName === "INSPIRE-HEP") {
+      rateLimit = 3;
     } else if (apiName === "Semantic Scholar") {
       const key = (this.getPref("semanticScholarApiKey") || "").trim();
       if (key) headers = { "x-api-key": key };
       rateLimit = 1;
-    } else if (apiName === "INSPIRE-HEP") {
-      rateLimit = 3;
+    } else if (apiName === "OpenAlex") {
+      const key = (this.getPref("openalexApiKey") || "").trim();
+      if (key) headers = { Authorization: `Bearer ${key}` };
+      rateLimit = key ? 30 : 10;
     }
 
     if (useDoi) {
