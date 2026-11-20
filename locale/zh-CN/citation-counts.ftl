@@ -38,9 +38,11 @@ citationcounts-preferences-pane-extra-title = 更新引用数时的处理方式
 citationcounts-preferences-pane-keep-citation-history =
     .label = 保留历史记录而非覆盖
 
-## OpenAlex API key
-citationcounts-preferences-openalex-api-key = OpenAlex API key（可选）
-citationcounts-preferences-openalex-api-key-description = 免费的 OpenAlex API key 提供更高的使用额度。
+## API keys
+citationcounts-preferences-pane-api-keys-title = API key（可选）
+citationcounts-preferences-pane-api-keys-description = 填写 API key 可获得更高的限额和更好的稳定性
+citationcounts-preferences-semanticscholar-api-key = Semantic Scholar
+citationcounts-preferences-openalex-api-key = OpenAlex
 
 ## Misc
 citationcounts-internal-error = 内部错误

@@ -447,7 +447,8 @@ ZoteroCitationCounts = {
    * @TODO make more robust, e.g. try to extract DOI from url/extra field as well.
    */
   _getDoi: function (item) {
-    const doi = item.getField("DOI");
+    const doi = (item.getField("DOI") || "").trim()
+      .replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, "");
     if (!doi) {
       throw new Error("citationcounts-progresswindow-error-no-doi");
     }
@@ -474,30 +475,32 @@ ZoteroCitationCounts = {
   /**
    * Send a request to a specified url, handle response with specified callback, and return a validated integer.
    */
-  _sendRequest: async function (url, callback, { headers } = {}) {
-    // No more than 5 requests in 1 second.
-    let now = Date.now();
-    this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < 1000);
-
-    if (this._requestTimestamps.length >= 5) {
-      const oldest = this._requestTimestamps[0];
-      const waitTime = 1000 - (now - oldest);
-      if (waitTime > 0) {
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-      }
-      // Re-filter after waiting
-      now = Date.now();
-      this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < 1000);
-    }
-    this._requestTimestamps.push(Date.now());
+  _sendRequest: async function (url, callback, { headers, rateLimit = 5 } = {}) {
+    const rateWindowMs = 1100;
 
     // Exponential retry delays
     const maxRetries = 4;
-    const baseDelay = 1000; // ms
+    const baseDelay = 1100; // ms
     const factor = 1.5;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        // No more than `rateLimit` requests in 1.1 seconds (1.1x safety buffer).
+        let now = Date.now();
+        this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < rateWindowMs);
+
+        if (this._requestTimestamps.length >= rateLimit) {
+          const oldest = this._requestTimestamps[this._requestTimestamps.length - rateLimit];
+          const waitTime = rateWindowMs - (now - oldest);
+          if (waitTime > 0) {
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+          // Re-filter after waiting
+          now = Date.now();
+          this._requestTimestamps = this._requestTimestamps.filter((t) => now - t < rateWindowMs);
+        }
+        this._requestTimestamps.push(Date.now());
+
         const response = await fetch(url, headers ? { headers } : undefined);
 
         if (!response.ok) {
@@ -549,9 +552,19 @@ ZoteroCitationCounts = {
       arxivField = false;
 
     const useTitleFallback = this.getPref("useTitleFallback");
-    const isOpenAlex = apiName === "OpenAlex";
-    const key = isOpenAlex ? (this.getPref("openalexApiKey") || "").trim() : "";
-    const headers = key ? { Authorization: `Bearer ${key}` } : undefined;
+    let headers;
+    let rateLimit = 5;
+    if (apiName === "OpenAlex") {
+      const key = (this.getPref("openalexApiKey") || "").trim();
+      if (key) headers = { Authorization: `Bearer ${key}` };
+      rateLimit = key ? 30 : 10;
+    } else if (apiName === "Semantic Scholar") {
+      const key = (this.getPref("semanticScholarApiKey") || "").trim();
+      if (key) headers = { "x-api-key": key };
+      rateLimit = 1;
+    } else if (apiName === "INSPIRE-HEP") {
+      rateLimit = 3;
+    }
 
     if (useDoi) {
       try {
@@ -560,20 +573,20 @@ ZoteroCitationCounts = {
         const count = await this._sendRequest(
           urlFunction(doiField, "doi"),
           requestCallback,
-          { headers }
+          { headers, rateLimit }
         );
 
         return [count, `${apiName}/DOI`];
       } catch (error) {
         errorMessage = error.message;
-        if (apiName == 'Crossref' || isOpenAlex) {
+        if (apiName === "Crossref" || apiName === "OpenAlex") {
           if (useTitleFallback) {
             try {
               const title = item.getField('title');
               const count = await this._sendRequest(
-                isOpenAlex ? this._openAlexUrlByTitle(title) : this._crossrefUrlByTitle(title, "crossref"),
-                isOpenAlex ? this._openAlexCallbackByTitle : this._crossrefCallbackByTitle,
-                { headers }
+                apiName === "OpenAlex" ? this._openAlexUrlByTitle(title) : this._crossrefUrlByTitle(title),
+                apiName === "OpenAlex" ? this._openAlexCallbackByTitle : this._crossrefCallbackByTitle,
+                { headers, rateLimit }
               );
 
               return [count, `${apiName}/title`];
@@ -602,7 +615,8 @@ ZoteroCitationCounts = {
 
         const count = await this._sendRequest(
           urlFunction(arxivField, "arxiv"),
-          requestCallback
+          requestCallback,
+          { headers, rateLimit }
         );
 
         return [count, `${apiName}/arXiv`];
@@ -633,9 +647,7 @@ ZoteroCitationCounts = {
   ////////////////////////////////////////////
 
   _openAlexUrl: function (id) {
-    const doi = decodeURIComponent(id).trim()
-      .replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, "");
-    return `https://api.openalex.org/works/doi:${encodeURIComponent(doi)}?select=cited_by_count`;
+    return `https://api.openalex.org/works/doi:${id}?select=cited_by_count`;
   },
 
   _openAlexUrlByTitle: function (title) {
@@ -654,7 +666,7 @@ ZoteroCitationCounts = {
     return `https://api.crossref.org/works/${id}/transform/application/vnd.citationstyles.csl+json`;
   },
 
-  _crossrefUrlByTitle: function (title, type) {
+  _crossrefUrlByTitle: function (title) {
     return `https://api.crossref.org/works?query.title=${encodeURIComponent(title)}`;
   },
 
@@ -679,12 +691,7 @@ ZoteroCitationCounts = {
     return `https://api.semanticscholar.org/graph/v1/paper/${prefix}${id}?fields=citationCount`;
   },
 
-  // The callback can be async if we want.
-  _semanticScholarCallback: async function (response) {
-    count = response["citationCount"];
-
-    // throttle Semantic Scholar so we don't reach limit.
-    await new Promise((r) => setTimeout(r, 3000));
-    return count;
+  _semanticScholarCallback: function (response) {
+    return response["citationCount"];
   },
 };
