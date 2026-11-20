@@ -214,6 +214,14 @@ ZoteroCitationCounts = {
    * Create a submenu to Zotero's "Item"-context menu, from which citation counts for selected items can be manually retrieved.
    */
   _createItemMenu: function (document) {
+    this._injectXULElement(
+      document,
+      "menuseparator",
+      "zotero-itemmenu-citationcounts-separator",
+      {},
+      "zotero-itemmenu"
+    );
+
     const menu = this._injectXULElement(
       document,
       "menu",
