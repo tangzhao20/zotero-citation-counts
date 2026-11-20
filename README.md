@@ -3,6 +3,7 @@
 - [GitHub](https://github.com/tangzhao20/zotero-citation-counts): Source code repository
 
 This is a plugin for [Zotero](https://www.zotero.org), a research source management tool. This plugin can auto-fetch citation counts for journal articles using various APIs, including [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net), [Semantic Scholar](https://www.semanticscholar.org), and [OpenAlex](https://openalex.org).
+
 [Google Scholar](https://scholar.google.com) is not supported because automated access is against its terms of service.
 
 If you have any bugs, questions, or feature requests, please [open an issue](https://github.com/tangzhao20/zotero-citation-counts/issues) in the GitHub repository.
@@ -19,17 +20,19 @@ Please [open an issue](https://github.com/tangzhao20/zotero-citation-counts/issu
 - Retrieve citation counts manually by right-clicking on one or more items in your Zotero library.
 - Works with the following APIs: [Crossref](https://www.crossref.org), [INSPIRE-HEP](https://inspirehep.net), [Semantic Scholar](https://www.semanticscholar.org), and [OpenAlex](https://openalex.org).
 - The plugin registers a custom column ("Citations") in your Zotero library so that items can be ordered by citation count.
-- Improved citation count retrieval operation status reporting, including item-specific error messages for those items where a citation count couldn't be retrieved.
-- Concurrent citation count retrieval operations are now possible. Especially important for the autoretrieve feature.
-- Fluent is used for localizing, while the locale files have been simplified and now cover the whole plugin. 
+- Progress window status reporting with a progress counter for batch updates and detailed error messages for single items.
+- Built-in per-API rate limiting and exponential backoff retries.
+- Localized with Fluent for English and Chinese.
 - Optionally search Crossref or OpenAlex by title if an item lacks a DOI.
+- Optionally configure API keys for Semantic Scholar and OpenAlex for higher rate limits and better stability.
+- Optionally keep citation count history in the Extra field.
 
 ## Acknowledgements
 
 This plugin is a refactored and enhanced version of [FrLars21's Zotero Citation Counts Manager](https://github.com/FrLars21/ZoteroCitationCountsManager), which in turn was based on [Erik Schnetter's Zotero Citations Counts Manager](https://github.com/eschnett/zotero-citationcounts). Code for that extension was based on [Zotero DOI Manager](https://github.com/bwiernik/zotero-shortdoi), which is based in part on [Zotero Google Scholar Citations](https://github.com/beloglazov/zotero-scholar-citations) by Anton Beloglazov.  
 Boilerplate for this plugin was based on Zotero's sample plugin for v7 [Make-It-Red](https://github.com/zotero/make-it-red).  
 
-## Installing
+## Installation
 
 - Download the `zotero-citation-counts-v<version>.xpi` file from [the latest release](https://github.com/tangzhao20/zotero-citation-counts/releases/latest)
 - Run **Zotero**
