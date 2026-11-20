@@ -435,7 +435,11 @@ ZoteroCitationCounts = {
       ? extra.split("\n").filter((line) => keepHistory || !pattern.test(line))
       : [];
 
-    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const today = `${year}-${month}-${day}`;
     extraFieldLines.unshift(`${count} citations (${source}) [${today}]`);
 
     item.setField("extra", extraFieldLines.join("\n"));
