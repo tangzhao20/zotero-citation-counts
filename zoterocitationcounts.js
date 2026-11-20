@@ -507,9 +507,8 @@ ZoteroCitationCounts = {
         const response = await fetch(url, headers ? { headers } : undefined);
 
         if (!response.ok) {
-          // If the server returned 404 or 400, it's a client error (e.g. DOI not found/invalid).
-          // Retrying won't change this, so we fail immediately.
-          if (response.status === 404 || response.status === 400) {
+          // Client/auth errors (e.g. DOI not found, invalid request, or bad API key) won't change on retry.
+          if ([400, 401, 403, 404].includes(response.status)) {
             throw new Error("citationcounts-progresswindow-error-bad-api-response");
           }
           throw new Error("Temporary error " + response.status);
@@ -664,7 +663,7 @@ ZoteroCitationCounts = {
   },
 
   _openAlexCallbackByTitle: function (response) {
-    return response["results"][0]["cited_by_count"];
+    return response?.results?.[0]?.cited_by_count;
   },
 
   _crossrefUrl: function (id, type) {
@@ -676,7 +675,7 @@ ZoteroCitationCounts = {
   },
 
   _crossrefCallbackByTitle: function (response) {
-    return response['message']['items'][0]["is-referenced-by-count"];
+    return response?.message?.items?.[0]?.["is-referenced-by-count"];
   },
 
   _crossrefCallback: function (response) {
